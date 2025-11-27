@@ -9,7 +9,8 @@ enum proc_status {
     PROC_READY,
     PROC_RUNNING,
     PROC_RUNNABLE,
-    PROC_PENDING_SYSCALL
+    PROC_PENDING_SYSCALL,
+    PROC_SLEEPING
 };
 
 #define MAX_NPROCESS        16
@@ -22,12 +23,24 @@ struct process {
     struct syscall syscall;
     enum proc_status status;
     uint mepc, saved_registers[SAVED_REGISTER_NUM];
-    /* Student's code goes here (Preemptive Scheduler | System Call). */
 
-    /* Add new fields for lifecycle statistics, MLFQ or process sleep. */
+    /* ---------- Lifecycle statistics (microseconds) ---------- */
+    ulonglong created_time;         /* when proc_alloc() was called */
+    ulonglong first_scheduled_time; /* first time this process was scheduled (0 = not yet) */
+    ulonglong cpu_time;             /* accumulated CPU time used */
+    ulonglong timer_interrupts;     /* number of times timer interrupted this process */
 
-    /* Student's code ends here. */
+    /* ---------- MLFQ scheduling fields ---------- */
+    int mlfq_level;                 /* 0 (highest priority) .. 4 (lowest) */
+    ulonglong mlfq_remaining;       /* remaining runtime allowed at current level (microseconds) */
+    ulonglong last_scheduled_time;  /* last timestamp when this process started running */
+
+    /* ---------- Sleeping support ---------- */
+    ulonglong sleep_until;         /* if > mtime_get(), process is sleeping until this time */
+
+    /* Other fields can go here if needed in the future */
 };
+
 
 ulonglong mtime_get();
 
